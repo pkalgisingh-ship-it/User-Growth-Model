@@ -3,74 +3,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # ---------- PAGE ----------
-st.set_page_config(page_title="AI App Growth Model", layout="centered")
+st.set_page_config(page_title="AI App Growth", layout="centered")
 
-st.title("📈 AI App User Growth Simulator")
-st.markdown("Simulate user growth of an AI app using Logistic Growth Model")
+st.title("📈 AI App User Growth Model")
 
-# ---------- SIDEBAR ----------
-st.sidebar.header("⚙️ Controls")
+st.write("This app shows user growth using Logistic Growth Model")
 
-market_size = st.sidebar.slider("Total Market Size", 100, 10000, 1000)
-initial_users = st.sidebar.slider("Initial Users", 1, 500, 50)
-growth_rate = st.sidebar.slider("Growth Rate (r)", 0.01, 1.0, 0.3)
-drop_rate = st.sidebar.slider("Drop Rate (d)", 0.0, 0.5, 0.05)
-time_steps = st.sidebar.slider("Time Steps", 10, 100, 50)
-
-run = st.sidebar.button("🚀 Run Simulation")
+# ---------- INPUT ----------
+K = st.slider("Market Size (K)", 1000, 100000, 50000)
+P0 = st.slider("Initial Users (P0)", 10, 1000, 100)
+r = st.slider("Growth Rate (r)", 0.01, 1.0, 0.2)
+days = st.slider("Days", 10, 100, 50)
 
 # ---------- MODEL ----------
-if run:
+t = np.linspace(0, days, days)
 
-    active = [float(initial_users)]
-    dropped = [0.0]
+users = K / (1 + ((K - P0) / P0) * np.exp(-r * t))
 
-    for t in range(time_steps):
+# ---------- OUTPUT ----------
+st.subheader("📊 Result")
 
-        current_active = active[-1]
+st.write("Peak Users:", int(max(users)))
 
-        new_users = growth_rate * current_active * (1 - current_active / market_size)
-        lost_users = drop_rate * current_active
+# ---------- GRAPH ----------
+fig, ax = plt.subplots()
 
-        next_active = current_active + new_users - lost_users
-        next_dropped = dropped[-1] + lost_users
+ax.plot(t, users)
+ax.set_xlabel("Days")
+ax.set_ylabel("Users")
+ax.set_title("User Growth Curve")
 
-        # Prevent negative values
-        next_active = max(next_active, 0)
-
-        active.append(next_active)
-        dropped.append(next_dropped)
-
-    # ---------- RESULTS ----------
-    st.subheader("📊 Results")
-
-    col1, col2, col3 = st.columns(3)
-
-    col1.metric("Peak Users", int(max(active)))
-    col2.metric("Final Active Users", int(active[-1]))
-    col3.metric("Total Dropped Users", int(dropped[-1]))
-
-    # ---------- GRAPH ----------
-    st.subheader("📈 Growth Curve")
-
-    fig, ax = plt.subplots()
-    ax.plot(active, label="Active Users")
-    ax.plot(dropped, label="Dropped Users")
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Users")
-    ax.legend()
-
-    st.pyplot(fig)
-
-    # ---------- INSIGHTS ----------
-    st.subheader("🧠 Insights")
-
-    if drop_rate > growth_rate:
-        st.error("⚠️ Users are leaving faster than joining — unhealthy growth")
-    elif max(active) > market_size * 0.8:
-        st.warning("⚠️ Market saturation reached")
-    else:
-        st.success("✅ Healthy growth of the AI app")
-
-else:
-    st.info("👈 Set values from sidebar and run simulation")
+st.pyplot(fig)
